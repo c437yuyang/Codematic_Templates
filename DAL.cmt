@@ -12,13 +12,14 @@
     if (identityKey!=null)
     {         
          returnValue = CodeCommon.DbTypeToCS(identityKey.TypeName);
-    }else  //用于没有自增长列，但是有PrimaryKey的情况，比如第一列的主键是Guid
+    }
+    else  //用于没有自增长列，但是有PrimaryKey的情况，比如第一列的主键是Guid
     {
       for(int i=0;i<host.Fieldlist.Count;++i)
       {
         if(host.Fieldlist[i].IsPrimaryKey)
         {
-            returnValue = host.Fieldlist[i].TypeName;
+            returnValue = CodeCommon.DbTypeToCS(host.Fieldlist[i].TypeName);
             identityKey = host.Fieldlist[i];
             break;
         }
@@ -60,9 +61,9 @@ namespace <#= host.Folder #>.DAL
 		/// <summary>
 		/// 增加一条数据,整形自增长返回id,guid返回parameters[0].Value,string返回true or false
 		/// </summary>
-		<#if(returnValue=="uniqueidentifier"){#>
+		<#if(returnValue=="Guid"){#>
       public Guid Add(<#= ModelSpace #> model)
-    <#} else if(returnValue=="varchar") {#>
+    <#} else if(returnValue=="string") {#>
       public bool Add(<#= ModelSpace #> model)
 		<#} else {#>
       public <#= returnValue #> Add(<#= ModelSpace #> model)
@@ -74,7 +75,7 @@ namespace <#= host.Folder #>.DAL
 			strSql.Append(") values (");
             strSql.Append("<# for(int i=0;i< host.Fieldlist.Count;i++) {   ColumnInfo c = host.Fieldlist[i]; if (!c.IsIdentity) {#><#=preParameter#><#= c.ColumnName#><# if (i< host.Fieldlist.Count-1 ) {#>,<#}#><#}}#>");            
             strSql.Append(") ");            
-            <#if (identityKey!=null && returnValue!="uniqueidentifier" && returnValue!="varchar") {#>strSql.Append(";select @@IDENTITY");<#}#>		
+            <#if (identityKey!=null && returnValue!="Guid" && returnValue!="string") {#>strSql.Append(";select @@IDENTITY");<#}#>		
 			SqlParameter[] parameters = {
 			<# for(int i=0;i< host.Fieldlist.Count;i++)
             {   
@@ -88,7 +89,7 @@ namespace <#= host.Folder #>.DAL
             parameters[<#= n #>].Value = <# if ("uniqueidentifier" == c.TypeName.ToLower() && c.IsPrimaryKey){#>Guid.NewGuid();<#} else {#>model.<#=c.ColumnName#>;<#} n=n+1; #>
             <# }#>
             
-			<#if (identityKey!=null && returnValue!="uniqueidentifier" && returnValue!="varchar") {#>   
+			<#if (identityKey!=null && returnValue!="Guid" && returnValue!="string") {#>   
 			object obj = <#= host.DbHelperName#>.GetSingle(strSql.ToString(),parameters);			
 			if (obj == null)
 			{
@@ -110,7 +111,7 @@ namespace <#= host.Folder #>.DAL
                 <#}#>
 			}	
 			
-			      <#} else if(identityKey!=null && returnValue=="uniqueidentifier"){#>
+			      <#} else if(identityKey!=null && returnValue=="Guid"){#>
       int rows = <#= host.DbHelperName#>.ExecuteSql(strSql.ToString(),parameters); 
       if(rows > 0)
       {
@@ -120,7 +121,7 @@ namespace <#= host.Folder #>.DAL
       {
           return Guid.Empty;
       }
-      <#} else if(identityKey!=null && returnValue=="varchar"){#>
+      <#} else if(identityKey!=null && returnValue=="string"){#>
       int rows = <#= host.DbHelperName#>.ExecuteSql(strSql.ToString(),parameters); 
       if(rows > 0)
       {

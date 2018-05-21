@@ -10,6 +10,19 @@
     {         
          returnValue = CodeCommon.DbTypeToCS(identityKey.TypeName);              
     }
+    else  //用于没有自增长列，但是有PrimaryKey的情况，比如第一列的主键是Guid
+    {
+      for(int i=0;i<host.Fieldlist.Count;++i)
+      {
+        if(host.Fieldlist[i].IsPrimaryKey)
+        {
+            returnValue = CodeCommon.DbTypeToCS(host.Fieldlist[i].TypeName);
+            identityKey = host.Fieldlist[i];
+            break;
+        }
+      }
+    }
+    
 #>
 using System; 
 using System.Text;
@@ -40,13 +53,17 @@ namespace <#= host.Folder #>.BLL
 		/// <summary>
 		/// 增加一条数据
 		/// </summary>
-		public <#= returnValue #>  Add(<#= ModelSpace #> model)
+		<#if (identityKey!=null && returnValue!="string") {#>
+    public <#= returnValue #>  Add(<#= ModelSpace #> model)
+    <#} else {#>
+    public void Add(<#= ModelSpace #> model)
+    <#}#>
 		{
-			<#if (identityKey!=null) {#>
-			return dal.Add(model);
-			<#} else {#>
-			dal.Add(model);
-			<#}#>			
+      <#if (identityKey!=null && returnValue!="string") {#>
+      return dal.Add(model);
+      <#} else {#>
+      dal.Add(model);
+      <#}#>
 		}
 
 		/// <summary>
@@ -178,7 +195,13 @@ namespace <#= host.Folder #>.BLL
         int res = 0;
         foreach (var item in list)
         {
+        <#if(returnValue=="string"){#>
+            res += dal.Add(item) ? 0 : 1; //返回值是bool
+        <#} else if(returnValue=="Guid") {#>
+            res += dal.Add(item) == Guid.Empty ? 0 : 1; //返回值是Guid
+        <#} else {#>
             res += dal.Add(item) == 0 ? 0 : 1; //返回值是id
+        <#}#>
         }
         return res;
     }
@@ -204,14 +227,15 @@ namespace <#= host.Folder #>.BLL
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < list.Count; ++i)
         {
+            <#if(returnValue=="string" || returnValue=="Guid"){#>
+            sb.AppendFormat("'{0}',", list[i].<#=identityKey.ColumnName#>);
+            <#} else {#>
             sb.AppendFormat("{0},", list[i].<#=identityKey.ColumnName#>);
+            <#}#>
         }
-
         string str_id_list = sb.ToString().TrimEnd(',');
         return dal.DeleteList(str_id_list);
     }
-
-    
 		<#}#>
 		
 		
