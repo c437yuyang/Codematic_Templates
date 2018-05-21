@@ -14,10 +14,11 @@ namespace <#= host.Folder #>.Model
 	<# if( host.TableDescription.Length > 0) {#>
  	//<#= host.TableDescription #>
 	<# } #>
-	public class <#= host.GetModelClass(host.TableName) #>
+	[Serializable]
+	public partial class <#= host.GetModelClass(host.TableName) #>
 	{
     <# foreach (ColumnInfo c in host.Fieldlist){#>
-    		<#if(CodeCommon.DbTypeToCS(c.TypeName)=="string" || CodeCommon.DbTypeToCS(c.TypeName)=="Guid") {#>
+    		<#if(CodeCommon.DbTypeToCS(c.TypeName)=="string" || CodeCommon.DbTypeToCS(c.TypeName)=="Guid" || c.IsIdentity) {#>
         <# null_ph = "";#>
         <#} else {#>
         <# null_ph = "?";#>
@@ -29,7 +30,7 @@ namespace <#= host.Folder #>.Model
 		{ #>/// <summary>
 		/// <#= string.IsNullOrEmpty(c.Description) ? c.ColumnName : c.Description #>
         /// </summary>		
-		<#if(CodeCommon.DbTypeToCS(c.TypeName)=="string" || CodeCommon.DbTypeToCS(c.TypeName)=="Guid") {#>
+		<#if(CodeCommon.DbTypeToCS(c.TypeName)=="string" || CodeCommon.DbTypeToCS(c.TypeName)=="Guid" || c.IsIdentity) {#>
       <# null_ph = "";#>
 		<#} else {#>
         <# null_ph = "?";#>
