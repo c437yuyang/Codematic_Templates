@@ -34,12 +34,13 @@ namespace <#= host.Folder #>.BLL
 	<# if( host.TableDescription.Length > 0) {#>
  	//<#= host.TableDescription #>
 	<# } #>
-	public partial class <#= host.GetBLLClass(host.TableName) #>
+	public partial class <#= host.GetBLLClass(host.TableName) #>Bll
 	{
    		     
 		private readonly <#= DALSpace #> dal=new <#= DALSpace #>();
-		public <#= host.GetBLLClass(host.TableName) #>()
+		private <#= host.GetBLLClass(host.TableName) #>()
 		{}
+		public static <#= host.GetBLLClass(host.TableName) #>Bll Instance { get; } = new <#= host.GetBLLClass(host.TableName) #>Bll();
 		
 		#region  Method
 		/// <summary>
@@ -102,11 +103,20 @@ namespace <#= host.Folder #>.BLL
 		/// <summary>
 		/// 获得前几行数据
 		/// </summary>
-		public DataSet GetList(int Top,string strWhere,string filedOrder)
+		public DataSet GetList(int Top,string strWhere,string order)
 		{
-			return dal.GetList(Top,strWhere,filedOrder);
+			return dal.GetList(Top,strWhere,order);
 		}
 		/// <summary>
+		/// 获得数据列表
+		/// </summary>
+		public List<<#= ModelSpace #>> GetModelList(int Top,string strWhere,string order)
+		{
+			DataSet ds = dal.GetList(Top,strWhere,order);
+			return DataTableToList(ds.Tables[0]);
+		}
+		
+    /// <summary>
 		/// 获得数据列表
 		/// </summary>
 		public List<<#= ModelSpace #>> GetModelList(string strWhere)
@@ -114,6 +124,35 @@ namespace <#= host.Folder #>.BLL
 			DataSet ds = dal.GetList(strWhere);
 			return DataTableToList(ds.Tables[0]);
 		}
+		
+    /// <summary>
+		/// 获得数据列表
+		/// </summary>
+		public Dictionary<<#= returnValue #>,<#= ModelSpace #>> GetModelMap(string strWhere)
+		{
+			DataSet ds = dal.GetList(strWhere);
+			List<<#= ModelSpace #>> list = DataTableToList(ds.Tables[0]);
+			Dictionary<<#= returnValue #>,<#= ModelSpace #>> map = new Dictionary<<#= returnValue #>,<#= ModelSpace #>>();
+			for(int i=0;i<list.Count;++i){
+        map.Add(list[i].<#=identityKey.ColumnName#>,list[i]);
+			}
+			return map;
+		}
+		
+    /// <summary>
+		/// 获得数据列表
+		/// </summary>
+		public Dictionary<<#= returnValue #>,<#= ModelSpace #>> GetModelMap(int Top,string strWhere,string order)
+		{
+			DataSet ds = dal.GetList(Top,strWhere,order);
+			List<<#= ModelSpace #>> list = DataTableToList(ds.Tables[0]);
+			Dictionary<<#= returnValue #>,<#= ModelSpace #>> map = new Dictionary<<#= returnValue #>,<#= ModelSpace #>>();
+			for(int i=0;i<list.Count;++i){
+        map.Add(list[i].<#=identityKey.ColumnName#>,list[i]);
+			}
+			return map;
+		}
+		
 		/// <summary>
 		/// 获得数据列表
 		/// </summary>
